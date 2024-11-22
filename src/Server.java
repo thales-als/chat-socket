@@ -1,26 +1,57 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server {
 
-	public static void main(String[] args) throws IOException {
-		ServerSocket serverSocket = new ServerSocket(3304);
-		Socket socket = serverSocket.accept();
-		
-		System.out.println("Client connected.");
-		
-		InputStreamReader in = new InputStreamReader(socket.getInputStream());
-		BufferedReader br = new BufferedReader(in);
-		
-		String str = br.readLine();
-		System.out.println("Server: " + str);
-		
-		PrintWriter pr = new PrintWriter(socket.getOutputStream());
-		pr.println("Is it working?");
-		pr.flush();
-	}
+    private static int port;
+    private static ServerSocket serverSocket;
+    private static List<ClientHandler> clientHandlers = new ArrayList<>();
+
+    public Server(int port) {
+        Server.port = port;
+    }
+
+    public static void main(String[] args) {
+        if (args.length > 0) {
+            port = Integer.parseInt(args[0]);
+        } else {
+            port = 12345;
+        }
+
+        Server server = new Server(port);
+        server.startServer();
+    }
+
+    public void startServer() {
+        try {
+            serverSocket = new ServerSocket(port);
+            System.out.println("Servidor iniciado na porta " + port);
+
+            while (!serverSocket.isClosed()) {
+                Socket socket = serverSocket.accept();
+                ClientHandler clientHandler = new ClientHandler(socket, clientHandlers);
+                clientHandlers.add(clientHandler);
+                new Thread(clientHandler).start();
+            }
+
+        } catch (IOException | IllegalArgumentException e) {
+            System.err.println("Erro ao inicializar o servidor na porta " + port + ": " + e.getMessage());
+        } finally {
+            closeServer();
+        }
+    }
+
+    public void closeServer() {
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+                System.out.println("Servidor fechado.");
+            }
+        } catch (IOException e) {
+            System.err.println("Erro ao fechar o servidor: " + e.getMessage());
+        }
+    }
 }
