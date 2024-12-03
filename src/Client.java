@@ -7,12 +7,11 @@ import java.util.Scanner;
 
 public class Client {
 
-    private static String host = "localhost"; // Endereço do servidor
-    private static int port = 12345; // Porta do servidor
-    private static boolean isRunning = true; // Controle para encerrar o cliente
+    private static String host = "localhost";
+    private static int port = 12345;
+    private static boolean isRunning = true;
 
     public static void main(String[] args) {
-        // Configura o host e a porta a partir dos argumentos ou usa os padrões
         if (args.length > 0) {
             host = args[0];
             port = Integer.parseInt(args[1]);
@@ -24,17 +23,15 @@ public class Client {
         }
 
         try (
-            Socket socket = new Socket(host, port); // Conecta ao servidor
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true); // Para enviar mensagens
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())); // Para receber mensagens
-            Scanner sc = new Scanner(System.in) // Para leitura de entrada do usuário
+            Socket socket = new Socket(host, port);
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            Scanner sc = new Scanner(System.in)
         ) {
-            // Lê o nome do usuário e o envia ao servidor
             System.out.print("Digite seu nome de usuário: ");
             String username = sc.nextLine();
             out.println(username);
 
-            // Thread para receber mensagens do servidor
             new Thread(() -> {
                 String serverMessage;
                 try {
@@ -48,13 +45,12 @@ public class Client {
                 }
             }).start();
 
-            // Envia mensagens do usuário para o servidor
             String userInput;
             while (isRunning) {
                 userInput = sc.nextLine();
-                if ("/exit".equalsIgnoreCase(userInput)) {
+                if ("/quit".equalsIgnoreCase(userInput)) {
                     isRunning = false;
-                    socket.close(); // Encerra a conexão
+                    socket.close();
                     System.out.println("Encerrando cliente...");
                 }
                 out.println(userInput);

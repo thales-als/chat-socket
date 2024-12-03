@@ -7,10 +7,10 @@ import java.util.List;
 
 public class ClientHandler implements Runnable {
 
-    private Socket socket; // Socket do cliente
-    private String username; // Nome do usuário
-    private PrintWriter out; // Para enviar mensagens ao cliente
-    private List<ClientHandler> clientHandlers; // Lista de todos os clientes conectados
+    private Socket socket;
+    private String username;
+    private PrintWriter out;
+    private List<ClientHandler> clientHandlers;
 
     public ClientHandler(Socket socket, List<ClientHandler> clientHandlers) {
         this.socket = socket;
@@ -20,17 +20,14 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            // Lê o nome de usuário do cliente
             username = in.readLine();
             System.out.println("Novo usuário conectado: " + username);
             broadcastMessage(username + " se conectou.");
 
-            // Envia mensagem de boas-vindas ao cliente
             out = new PrintWriter(socket.getOutputStream(), true);
             out.println("Bem-vindo, " + username + "!");
-            out.println("Para se desconectar, digite: /exit");
+            out.println("Para se desconectar, digite: /quit");
 
-            // Processa mensagens recebidas do cliente
             String message;
             while ((message = in.readLine()) != null) {
                 broadcastMessage("[" + username + "]: " + message);
@@ -39,11 +36,10 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             System.err.println("Erro ao lidar com o cliente: " + e.getMessage());
         } finally {
-            logout(); // Remove o cliente ao desconectar
+            logout();
         }
     }
 
-    // Envia mensagem para todos os outros clientes
     private void broadcastMessage(String message) {
         for (ClientHandler clientHandler : clientHandlers) {
             if (clientHandler != this) {
@@ -52,7 +48,6 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // Trata a desconexão do cliente
     private void logout() {
         try {
             broadcastMessage(username + " se desconectou.");
@@ -61,6 +56,6 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             System.err.println("Erro ao fechar o socket do cliente: " + e.getMessage());
         }
-        clientHandlers.remove(this); // Remove o handler da lista
+        clientHandlers.remove(this);
     }
 }
